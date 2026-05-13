@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoundIt - Dashboard</title>
+
+    <link rel="stylesheet" href="lost.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <h1>Found<span>It</span></h1>
+
+            <div class="nav-links">
+                <a href="landing.html">Home</a>
+                <a href="#report">Report Item</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="hero">
+        <h2>Lost or Found Something?</h2>
+        <p>Recover what's yours. Return what's not.</p>
+        <p>The community-driven lost and found tracking system.</p>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+
+        <!-- Report Form -->
+        <section id="report" class="card">
+
+            <h3>Report an Item</h3>
+
+            <form id="report-form">
+
+                <div class="form-group">
+                    <label>Item Name</label>
+
+                    <input
+                        type="text"
+                        id="itemName"
+                        placeholder="e.g., Blue Leather Wallet"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Location</label>
+
+                    <input
+                        type="text"
+                        id="location"
+                        placeholder="e.g., Central Park Bench"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label>Contact Number</label>
+
+                    <input
+                        type="tel"
+                        id="contactNumber"
+                        placeholder="e.g., 09XX XXX XXXX"
+                        required
+                    >
+                </div>
+
+                <div class="form-row">
+
+                    <div class="form-group">
+                        <label>Status</label>
+
+                        <select id="status">
+
+                            <option value="lost">
+                                Lost
+                            </option>
+
+                            <option value="found">
+                                Found
+                            </option>
+
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Date</label>
+
+                        <input
+                            type="date"
+                            id="date"
+                            required
+                        >
+                    </div>
+
+                </div>
+
+                <button type="submit" class="btn-primary">
+                    Post Report
+                </button>
+
+            </form>
+
+        </section>
+
+        <!-- Reports Feed -->
+        <section id="feed">
+
+            <h3>Recent Reports</h3>
+
+            <div class="grid" id="itemGrid">
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+
+    <!-- Firebase Script -->
+    <script type="module">
+
+        // Firebase imports
+        import { initializeApp }
+        from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+        import {
+            getDatabase,
+            ref,
+            push,
+            onValue
+        }
+        from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+
+
+        // Firebase configuration
+        const firebaseConfig = {
+
+            apiKey: "AIzaSyDrHnglf3knpxNZdtqKIF65ZAE2JXLI9gc",
+
+            authDomain: "lost-and-found-system-c8972.firebaseapp.com",
+
+            databaseURL: "https://lost-and-found-system-c8972-default-rtdb.asia-southeast1.firebasedatabase.app",
+
+            projectId: "lost-and-found-system-c8972",
+
+            storageBucket: "lost-and-found-system-c8972.firebasestorage.app",
+
+            messagingSenderId: "681000687209",
+
+            appId: "1:681000687209:web:51cf9ed18a6e72dd7374f8",
+
+            measurementId: "G-02DGKWZC6J"
+
+        };
+
+
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+
+        const database = getDatabase(app);
+
+
+
+        // Database reference
+        const reportsRef = ref(database, "reports");
+
+
+
+        // HTML elements
+        const reportForm = document.getElementById("report-form");
+
+        const itemGrid = document.getElementById("itemGrid");
+
+
+
+        // Submit form
+        reportForm.addEventListener("submit", function(e) {
+
+            e.preventDefault();
+
+
+
+            // Get form values
+            const reportData = {
+
+                itemName:
+                    document.getElementById("itemName").value,
+
+                location:
+                    document.getElementById("location").value,
+
+                contactNumber:
+                    document.getElementById("contactNumber").value,
+
+                status:
+                    document.getElementById("status").value,
+
+                date:
+                    document.getElementById("date").value
+
+            };
+
+
+
+            // Save to Firebase
+            push(reportsRef, reportData);
+
+
+
+            // Success message
+            alert("Report Posted Successfully!");
+
+
+
+            // Reset form
+            reportForm.reset();
+
+        });
+
+
+
+
+        // Display Firebase data
+        onValue(reportsRef, (snapshot) => {
+
+            // Clear grid first
+            itemGrid.innerHTML = "";
+
+
+
+            snapshot.forEach((childSnapshot) => {
+
+                const item = childSnapshot.val();
+
+
+
+                // Create card
+                const newCard = document.createElement("div");
+
+
+
+                newCard.className =
+                    `item-card ${item.status}`;
+
+
+
+                // Card content
+                newCard.innerHTML = `
+
+                    <span class="badge">
+                        ${item.status}
+                    </span>
+
+                    <h4>
+                        ${item.itemName}
+                    </h4>
+
+                    <p>
+                        <strong>Location:</strong>
+                        ${item.location}
+                    </p>
+
+                    <p>
+                        <strong>Contact:</strong>
+                        ${item.contactNumber}
+                    </p>
+
+                    <p class="date">
+                        Posted on ${item.date}
+                    </p>
+
+                `;
+
+
+
+                // Add card to top
+                itemGrid.prepend(newCard);
+
+            });
+
+        });
+
+    </script>
+
+</body>
+</html>
